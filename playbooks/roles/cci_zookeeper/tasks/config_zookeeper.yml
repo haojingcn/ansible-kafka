@@ -1,0 +1,33 @@
+---
+
+- name: Initialize zookeeper configuration
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ cci_zookeeper.home_path }}/kafka_{{ cci_zookeeper.version }}/{{ item.dest }}" 
+    owner: "{{ item.owner|default('zookeeper') }}"
+    group: "{{ item.group|default('zookeeper') }}"
+    mode: "{{ item.mode|default('0644') }}"
+  with_items:
+    - { src: "zookeeper-server.conf.j2", dest: "config/zookeeper-server.properties" }
+  tags:
+    - zookeeper-config
+
+- name: get zookeeper service status
+  shell: |
+    ps -ef|grep zookeeper|wc -l
+  args:
+    chdir: "/"
+    executable: "/bin/bash"
+  register: zookeeper_status
+  tags:
+    - zookeeper-restart
+
+- name: start zookeeper
+  shell: |
+    nohup bash bin/zookeeper-server-start.sh config/zookeeper-server.properties > {{ cci_zookeeper.log_zookeeper_dir }}/zookeeper-server.log 2>&1 &
+  args:
+    chdir: "{{ cci_zookeeper.home_path }}/kafka_{{ cci_zookeeper.version }}"
+    executable: "/bin/bash"
+  when: zookeeper_status.stdout <= "2"
+  tags:
+    - zookeeper-restart

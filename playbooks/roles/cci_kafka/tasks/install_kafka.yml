@@ -1,0 +1,66 @@
+---
+
+- name: create kafka system group
+  group:
+    name: "{{ cci_kafka.kafka_system_group_name }}"
+    state: "present"
+    system: "yes"
+  tags:
+    - kafka-preconfig
+
+- name: create kafka system user
+  user:
+    name: "{{ cci_kafka.kafka_system_user_name }}"
+    group: "{{ cci_kafka.kafka_system_group_name }}"
+    comment: "{{ cci_kafka.kafka_system_comment }}"
+    shell: "{{ cci_kafka.kafka_system_shell }}"
+    system: "yes"
+    createhome: "yes"
+    home: "{{ cci_kafka.home_path }}"
+  tags:
+    - kafka-preconfig
+
+- name: create kafka log dir
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner|default('kafka') }}"
+    group: "{{ item.group|default('kafka') }}"
+    mode: "{{ item.mode|default('0755') }}"
+  with_items:
+    - { path: "{{ cci_kafka.log_kafka_dir }}", mode: "0755", owner: "{{ cci_kafka.kafka_system_user_name }}", group: "{{ cci_kafka.kafka_system_group_name }}" }
+  tags:
+    - kafka-preconfig
+
+- name: Test for log directory or link
+  shell: |
+    if [ -h "{{ cci_kafka.log_kafka_dir }}" ]; then
+      chown -h {{ cci_kafka.kafka_system_user_name }}:{{ cci_kafka.kafka_system_group_name }} "{{ cci_kafka.log_kafka_dir }}"
+      chown -R {{ cci_kafka.kafka_system_user_name }}:{{ cci_kafka.kafka_system_group_name }} "$(readlink {{ cci_kafka.log_kafka_dir }})"
+    else
+      exit 1
+    fi
+  register: log_dir
+  failed_when: false
+  changed_when: log_dir.rc != 0
+  tags:
+    - kafka-preconfig
+
+- name: copy kafka
+  copy:
+    dest: "{{ cci_kafka.home_path }}"
+    owner: "{{ cci_kafka.kafka_system_user_name }}"
+    group: "{{ cci_kafka.kafka_system_group_name }}"
+    mode: "0644"
+    src: "kafka_{{ cci_kafka.version }}.tgz"
+  tags:
+    - kafka-install
+
+- name: release kafka
+  shell: |
+    tar -zxvf kafka_{{ cci_kafka.version }}.tgz -C {{ cci_kafka.home_path }}
+  args:
+    chdir: "{{ cci_kafka.home_path }}"
+    executable: /bin/bash
+  tags:
+    - kafka-install

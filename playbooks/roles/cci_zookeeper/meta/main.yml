@@ -1,0 +1,19 @@
+---
+# Copyright 2016, CityCloud CN, Inc.
+#
+# Author:mhjlq1989@gmail.com
+
+galaxy_info:
+  author: mhjlq1989@gmail.com 
+  description: Install zookeeper and config it
+  license: "license (BSD, MIT)"
+  min_ansible_version: 1.9.0
+  platforms:
+    - name: Debian
+      versions:
+        - wheezy
+  categories:
+    - python
+    - zookeeper
+    - development
+dependencies:

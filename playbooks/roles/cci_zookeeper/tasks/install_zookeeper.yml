@@ -1,0 +1,66 @@
+---
+
+- name: create zookeeper system group
+  group:
+    name: "{{ cci_zookeeper.zookeeper_system_group_name }}"
+    state: "present"
+    system: "yes"
+  tags:
+    - zookeeper-preconfig
+
+- name: create zookeeper system user
+  user:
+    name: "{{ cci_zookeeper.zookeeper_system_user_name }}"
+    group: "{{ cci_zookeeper.zookeeper_system_group_name }}"
+    comment: "{{ cci_zookeeper.zookeeper_system_comment }}"
+    shell: "{{ cci_zookeeper.zookeeper_system_shell }}"
+    system: "yes"
+    createhome: "yes"
+    home: "{{ cci_zookeeper.home_path }}"
+  tags:
+    - zookeeper-preconfig
+
+- name: create zookeeper log dir
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner|default('zookeeper') }}"
+    group: "{{ item.group|default('zookeeper') }}"
+    mode: "{{ item.mode|default('0755') }}"
+  with_items:
+    - { path: "{{ cci_zookeeper.log_zookeeper_dir }}", mode: "0755", owner: "{{ cci_zookeeper.zookeeper_system_user_name }}", group: "{{ cci_zookeeper.zookeeper_system_group_name }}" }
+  tags:
+    - zookeeper-preconfig
+
+- name: Test for log directory or link
+  shell: |
+    if [ -h "{{ cci_zookeeper.log_zookeeper_dir }}" ]; then
+      chown -h {{ cci_zookeeper.zookeeper_system_user_name }}:{{ cci_zookeeper.zookeeper_system_group_name }} "{{ cci_zookeeper.log_zookeeper_dir }}"
+      chown -R {{ cci_zookeeper.zookeeper_system_user_name }}:{{ cci_zookeeper.zookeeper_system_group_name }} "$(readlink {{ cci_zookeeper.log_zookeeper_dir }})"
+    else
+      exit 1
+    fi
+  register: log_dir
+  failed_when: false
+  changed_when: log_dir.rc != 0
+  tags:
+    - zookeeper-preconfig
+
+- name: copy zookeeper
+  copy:
+    dest: "{{ cci_zookeeper.home_path }}"
+    owner: "{{ cci_zookeeper.zookeeper_system_user_name }}"
+    group: "{{ cci_zookeeper.zookeeper_system_group_name }}"
+    mode: "0644"
+    src: "kafka_{{ cci_zookeeper.version }}.tgz"
+  tags:
+    - zookeeper-install
+
+- name: release zookeeper
+  shell: |
+    tar -zxvf kafka_{{ cci_zookeeper.version }}.tgz -C {{ cci_zookeeper.home_path }}
+  args:
+    chdir: "{{ cci_zookeeper.home_path }}"
+    executable: /bin/bash
+  tags:
+    - zookeeper-install

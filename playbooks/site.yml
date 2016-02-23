@@ -1,0 +1,13 @@
+---
+
+- hosts: all
+  roles:
+  - { role: "cci_hosts" }
+
+- hosts: zookeeper
+  roles:
+  - { role: "cci_zookeeper" }
+
+- hosts: kafka
+  roles:
+  - { role: "cci_kafka" }

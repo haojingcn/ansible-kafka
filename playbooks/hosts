@@ -1,0 +1,6 @@
+[kafka]
+kafka3 ansible_ssh_host=10.10.82.38
+kafka4 ansible_ssh_host=10.10.82.39
+
+[zookeeper]
+zookeeper ansible_ssh_host=10.10.82.38

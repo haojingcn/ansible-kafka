@@ -1,1 +1,1 @@
-# ansible-kafka
+just for my lazy bones.

@@ -1,0 +1,33 @@
+---
+
+- name: Initialize kafka configuration
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ cci_kafka.home_path }}/kafka_{{ cci_kafka.version }}/{{ item.dest }}" 
+    owner: "{{ item.owner|default('kafka') }}"
+    group: "{{ item.group|default('kafka') }}"
+    mode: "{{ item.mode|default('0644') }}"
+  with_items:
+    - { src: "kafka-server.conf.j2", dest: "config/kafka-server.properties" }
+  tags:
+    - kafka-config
+
+- name: get kafka service status
+  shell: |
+    ps -ef|grep kafka|wc -l
+  args:
+    chdir: "/"
+    executable: "/bin/bash"
+  register: kafka_status
+  tags:
+    - kafka-restart
+
+- name: start kafka
+  shell: |
+    nohup bash bin/kafka-server-start.sh config/kafka-server.properties > {{ cci_kafka.log_kafka_dir }}/kafka-server.log 2>&1 &
+  args:
+    chdir: "{{ cci_kafka.home_path }}/kafka_{{ cci_kafka.version }}"
+    executable: "/bin/bash"
+  when: kafka_status.stdout <= "2"
+  tags:
+    - kafka-restart

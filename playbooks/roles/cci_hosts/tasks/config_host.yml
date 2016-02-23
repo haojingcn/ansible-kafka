@@ -1,0 +1,33 @@
+---
+
+- name: update sources
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode|default('0644') }}"
+    owner: "{{ item.owner|default('root') }}"
+    group: "{{ item.group|default('root') }}"
+  with_items:
+    - { src: "sources.j2", dest: "/etc/apt/sources.list" }
+  tags: 
+    - host-config
+
+- name: do update repo
+  shell: "apt-get update"
+  ignore_errors: true
+  tags:
+    - host-config
+
+- name: preinstall java
+  apt:
+    pkg: "{{ item }}"
+    state: "present"
+    cache_valid_time: 600
+    update_cache: yes
+  register: install_packages
+  until: install_packages|success
+  retries: 5
+  delay: 2
+  with_items: cci_hosts.hosts_apt_packages
+  tags:
+    - host-config 
