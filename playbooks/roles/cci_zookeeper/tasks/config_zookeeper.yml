@@ -14,7 +14,7 @@
 
 - name: get zookeeper service status
   shell: |
-    ps -ef|grep zookeeper|wc -l
+    netstat -nplt|grep {{ cci_zookeeper.clientPort }}|awk '{print $7}'|cut -d '/' -f1|wc -l
   args:
     chdir: "/"
     executable: "/bin/bash"
@@ -28,6 +28,17 @@
   args:
     chdir: "{{ cci_zookeeper.home_path }}/kafka_{{ cci_zookeeper.version }}"
     executable: "/bin/bash"
-  when: zookeeper_status.stdout <= "2"
+  when: zookeeper_status.stdout <= "1"
+  tags:
+    - zookeeper-restart
+
+- name: restart zookeeper
+  shell: |
+    kill -9 `netstat -nplt|grep {{ cci_zookeeper.clientPort }}|awk '{print $7}'|cut -d '/' -f1`
+    sleep 4
+    nohup bash bin/zookeeper-server-start.sh config/zookeeper-server.properties > {{ cci_zookeeper.log_zookeeper_dir }}/zookeeper-server.log 2>&1 &
+  args:
+    chdir: "{{ cci_zookeeper.home_path }}/kafka_{{ cci_zookeeper.version }}"
+    executable: "/bin/bash"
   tags:
     - zookeeper-restart

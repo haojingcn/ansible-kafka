@@ -1,6 +1,7 @@
 [kafka]
-kafka3 ansible_ssh_host=10.10.82.38
-kafka4 ansible_ssh_host=10.10.82.39
+# u must give the host an identification
+kafka3 ansible_ssh_host=10.10.82.38 id=1
+kafka4 ansible_ssh_host=10.10.82.39 id=2
 
 [zookeeper]
-zookeeper ansible_ssh_host=10.10.82.38
+zookeeper ansible_ssh_host=10.10.82.150

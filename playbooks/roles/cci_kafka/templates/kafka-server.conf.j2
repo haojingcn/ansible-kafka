@@ -39,10 +39,10 @@ host.name={{ cci_kafka.host_interface_ip }}
 #advertised.port=<port accessible by clients>
 
 # The number of threads handling network requests
-num.network.threads= {{ cci_kafka.num_network_threads }}
+num.network.threads={{ cci_kafka.num_network_threads }}
  
 # The number of threads doing disk I/O
-num.io.threads= {{ cci_kafka.num_io_threads }}
+num.io.threads={{ cci_kafka.num_io_threads }}
 
 # The send buffer (SO_SNDBUF) used by the socket server
 socket.send.buffer.bytes={{ cci_kafka.socket_send_buffer_bytes }}
@@ -117,7 +117,7 @@ log.cleaner.enable={{ cci_kafka.log_cleaner_enable }}
 # server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002".
 # You can also append an optional chroot string to the urls to specify the
 # root directory for all kafka znodes.
-zookeeper.connect={% for connect in cci_kafka.zookeeper_connect %}{{ connect }}{% if not loop.last %},{% endif %}{% endfor %}
+zookeeper.connect={{ cci_kafka.zookeeper_connect }}
 
 # Timeout in ms for connecting to zookeeper
 zookeeper.connection.timeout.ms={{ cci_kafka.zookeeper_connection_timeout_ms }}

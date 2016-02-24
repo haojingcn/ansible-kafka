@@ -16,7 +16,7 @@ cci_kafka:
   home_path: '/home/kafka'
   log_kafka_dir: '/home/kafka/log'
   
-  broker_id: '1'
+  broker_id: "{{ hostvars[inventory_hostname]['id'] }}"
   port: '9092'
   host_interface_ip: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
   num_network_threads: '3'
@@ -25,7 +25,7 @@ cci_kafka:
   socket_receive_buffer_bytes: '102400'
   socket_request_max_bytes: '104857600'
   # store the topic logs
-  log_dirs: /tmp/kafka-logs
+  log_dirs: /home/kafka/kafka-logs
   num_partitions: 1
   num_recovery_threads_per_data_dir: 1
   log_flush_interval_messages: 10000
@@ -35,7 +35,5 @@ cci_kafka:
   log_segment_bytes: 1073741824
   log_retention_check_interval_ms: 300000
   log_cleaner_enable: false
-  zookeeper_connect: 
-    - localhost:2181
-    - localhost:2282
+  zookeeper_connect: "{% for host in groups['zookeeper'] %}{{ hostvars[host]['ansible_ssh_host'] }}:2181{% if not loop.last %},{% endif %}{% endfor %}"
   zookeeper_connection_timeout_ms: 6000

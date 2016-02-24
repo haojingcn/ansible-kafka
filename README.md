@@ -6,4 +6,4 @@ ansible 1.9+
 
 2.how to run
 (1)edit playbooks/sites.yml and hosts
-(2)ansible-playbook site.yml -vvvv
+(2)ansible-playbook site.yml -vvvv --skip-tags=kafka-restart

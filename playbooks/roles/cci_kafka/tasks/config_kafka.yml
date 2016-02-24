@@ -14,13 +14,13 @@
 
 - name: get kafka service status
   shell: |
-    ps -ef|grep kafka|wc -l
+    netstat -nplt|grep {{ cci_kafka.port }}|awk '{print $7}'|cut -d '/' -f1|wc -l
   args:
     chdir: "/"
     executable: "/bin/bash"
   register: kafka_status
   tags:
-    - kafka-restart
+    - kafka-start
 
 - name: start kafka
   shell: |
@@ -28,6 +28,17 @@
   args:
     chdir: "{{ cci_kafka.home_path }}/kafka_{{ cci_kafka.version }}"
     executable: "/bin/bash"
-  when: kafka_status.stdout <= "2"
+  when: kafka_status.stdout <= "1"
+  tags:
+    - kafka-start
+
+- name: restart kafka
+  shell: |
+    kill -9 `netstat -nplt|grep {{ cci_kafka.port }}|awk '{print $7}'|cut -d '/' -f1`
+    sleep 4
+    nohup bash bin/kafka-server-start.sh config/kafka-server.properties > {{ cci_kafka.log_kafka_dir }}/kafka-server.log 2>&1 &
+  args:
+    chdir: "{{ cci_kafka.home_path }}/kafka_{{ cci_kafka.version }}"
+    executable: "/bin/bash"
   tags:
     - kafka-restart
